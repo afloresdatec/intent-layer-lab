@@ -63,5 +63,7 @@ Ver `Makefile` para los targets de render/validación/pruebas, y
 - El workflow de CI no usa secretos, no accede a ningún clúster, corre con
   permisos mínimos (`contents: read`) y se dispara solo con `pull_request`.
 - El `AppProject` de Argo CD restringe destino (un solo namespace),
-  recursos de clúster (ninguno) y tipos de recursos namespaced sensibles
+  recursos de clúster (únicamente `Namespace`, imprescindible para que
+  Argo CD pueda crear el namespace `intent-lab` vía `CreateNamespace=true`)
+  y tipos de recursos namespaced sensibles
   (`Secret`, `Role`, `RoleBinding`, `ServiceAccount`, `NetworkPolicy`).

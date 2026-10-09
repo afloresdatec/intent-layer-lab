@@ -69,3 +69,24 @@ entrada indica fecha, comando ejecutado y resultado real.
   required: Repository not found"*. Esperado: el repo remoto
   `afloresdatec/intent-layer-lab` todavía no existe en GitHub (no se ha
   hecho push). Pendiente de FASE siguiente, bajo autorización explícita.
+
+## Publicación del repo y primer sync de Argo CD
+
+- Fecha: 2026-10-09
+- Commit local `71240fe` (sin trailers de IA, autor `alvaroflores
+  <alvaroflores@datec.com.bo>`), 34 archivos.
+- Repo creado y publicado: `https://github.com/afloresdatec/intent-layer-lab`
+  (público), `git push -u origin main` exitoso.
+- Conflicto detectado y corregido: `clusterResourceWhitelist: []` (vacío)
+  bloqueaba `CreateNamespace=true`, porque `Namespace` es un recurso de
+  clúster. Se corrigió `argocd/appproject.yaml` para permitir
+  únicamente `{group: "", kind: Namespace}` en el whitelist, y se
+  reaplicó.
+- Tras agotar el backoff de reintentos de la operación de sync anterior
+  (que llevaba el error viejo cacheado), Argo CD sincronizó solo:
+  `SYNC STATUS: Synced`, `HEALTH STATUS: Healthy`.
+- Namespace `intent-lab`: `Active`. Deployment `intent-lab`: `2/2 Ready`,
+  imagen `docker.io/library/nginx:1.27.3`. Service `intent-lab`:
+  `ClusterIP` activo en el puerto 80. Todo gestionado por Argo CD vía
+  GitOps, sin intervención manual sobre el clúster más allá de los
+  `kubectl apply` de `appproject.yaml`/`application.yaml` autorizados.

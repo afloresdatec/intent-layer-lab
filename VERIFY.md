@@ -10,7 +10,7 @@ laboratorio completo. Se completa a medida que se avanzan las fases.
       vocabulario cerrado (ver `intents/examples/invalid/`).
 - [x] FASE 3: render de `apps/intent-lab/overlays/dev` pasa
       `kubeconform -strict` y las políticas `conftest`.
-- [ ] `argocd/appproject.yaml` y `argocd/application.yaml` aplicados
+- [x] `argocd/appproject.yaml` y `argocd/application.yaml` aplicados
       manualmente; Argo CD sincroniza `apps/intent-lab/overlays/dev` al
       namespace `intent-lab`.
 - [ ] Pipeline de CI corre en un PR de prueba, sin secretos ni acceso a

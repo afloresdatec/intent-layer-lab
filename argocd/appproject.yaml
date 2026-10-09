@@ -1,7 +1,11 @@
 # AppProject que acota el radio de acción de Argo CD para este laboratorio:
 # solo puede leer este repositorio y solo puede escribir en el namespace
-# intent-lab del clúster local (sin recursos a nivel de clúster, y sin
-# permiso para crear Secret/Role/RoleBinding/ServiceAccount/NetworkPolicy).
+# intent-lab del clúster local, sin permiso para crear
+# Secret/Role/RoleBinding/ServiceAccount/NetworkPolicy.
+#
+# clusterResourceWhitelist solo incluye Namespace, porque la Application
+# usa syncOptions: CreateNamespace=true (requiere crear ese único recurso
+# de clúster). Ningún otro tipo de recurso de clúster está permitido.
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -17,7 +21,9 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: intent-lab
 
-  clusterResourceWhitelist: []
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
 
   namespaceResourceBlacklist:
     - group: ""
