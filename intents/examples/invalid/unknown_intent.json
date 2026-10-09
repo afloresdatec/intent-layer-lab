@@ -1,0 +1,7 @@
+{
+  "intent": "delete_namespace",
+  "target": "intent-lab",
+  "namespace": "intent-lab",
+  "requested_by": "ai-assistant@example.invalid",
+  "params": {}
+}

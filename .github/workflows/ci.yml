@@ -1,0 +1,57 @@
+# CI de solo validación: nunca usa secretos ni accede a ningún clúster.
+# No aplica argocd/application.yaml ni argocd/appproject.yaml: eso se hace
+# manualmente. El merge y el sync a Argo CD son siempre decisión humana.
+name: validate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  KUSTOMIZE_VERSION: v5.8.3
+  CONFTEST_VERSION: 0.71.1
+  KUBECONFORM_VERSION: v0.8.0
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      # actions/setup-python v7.0.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install kustomize, conftest, kubeconform (versiones fijadas)
+        run: |
+          set -euo pipefail
+          curl -fsSL -o kustomize.tar.gz "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+          tar -xzf kustomize.tar.gz kustomize
+          sudo mv kustomize /usr/local/bin/kustomize
+
+          curl -fsSL -o conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          tar -xzf conftest.tar.gz conftest
+          sudo mv conftest /usr/local/bin/conftest
+
+          curl -fsSL -o kubeconform.tar.gz "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          tar -xzf kubeconform.tar.gz kubeconform
+          sudo mv kubeconform /usr/local/bin/kubeconform
+
+      - name: Instalar dependencias de Python
+        run: pip install -r requirements-dev.txt
+
+      - name: Render con kustomize
+        run: kustomize build apps/intent-lab/overlays/dev
+
+      - name: Validar esquema de los manifiestos (kubeconform)
+        run: kustomize build apps/intent-lab/overlays/dev | kubeconform -strict -summary
+
+      - name: Validar políticas (conftest/OPA)
+        run: kustomize build apps/intent-lab/overlays/dev | conftest test - -p policies
+
+      - name: Pruebas (pytest)
+        run: pytest -q

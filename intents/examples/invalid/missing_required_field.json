@@ -1,0 +1,8 @@
+{
+  "intent": "scale_deployment",
+  "target": "intent-lab",
+  "namespace": "intent-lab",
+  "params": {
+    "replicas": 3
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/intent.schema.json",
+  "title": "Intent",
+  "description": "Vocabulario cerrado de cambios que una IA puede proponer. No autoriza ejecución: solo describe la intención, que luego se valida, traduce y aplica mediante el flujo determinista (CI + políticas + aprobación humana + Argo CD).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["intent", "target", "namespace", "requested_by", "params"],
+  "properties": {
+    "intent": {
+      "type": "string",
+      "enum": ["scale_deployment", "set_image_tag"]
+    },
+    "target": {
+      "description": "Nombre del Deployment objetivo (el único que existe en este laboratorio).",
+      "type": "string",
+      "const": "intent-lab"
+    },
+    "namespace": {
+      "description": "Namespace objetivo (el único permitido por el AppProject de Argo CD).",
+      "type": "string",
+      "const": "intent-lab"
+    },
+    "requested_by": {
+      "description": "Identidad de quien solicita el cambio.",
+      "type": "string",
+      "format": "email"
+    },
+    "params": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "replicas": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "image_tag": {
+          "type": "string",
+          "pattern": "^(?!latest$)[A-Za-z0-9._-]+$"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "intent": { "const": "scale_deployment" } }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["replicas"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "intent": { "const": "set_image_tag" } }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": ["image_tag"]
+          }
+        }
+      }
+    }
+  ]
+}

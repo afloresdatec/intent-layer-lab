@@ -1,0 +1,32 @@
+# AppProject que acota el radio de acción de Argo CD para este laboratorio:
+# solo puede leer este repositorio y solo puede escribir en el namespace
+# intent-lab del clúster local (sin recursos a nivel de clúster, y sin
+# permiso para crear Secret/Role/RoleBinding/ServiceAccount/NetworkPolicy).
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: intent-lab
+  namespace: argocd
+spec:
+  description: Laboratorio intent-layer + GitOps (clúster local, uso exclusivo del namespace intent-lab)
+
+  sourceRepos:
+    - https://github.com/afloresdatec/intent-layer-lab.git
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: intent-lab
+
+  clusterResourceWhitelist: []
+
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: Secret
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+    - group: ""
+      kind: ServiceAccount
+    - group: networking.k8s.io
+      kind: NetworkPolicy

@@ -1,0 +1,26 @@
+# Se aplica manualmente (kubectl apply -f); no desde el CI ni desde una IA.
+# El CI solo valida manifiestos (schema + kustomize build + conftest + kubeconform);
+# nunca tiene credenciales de clúster ni aplica este Application.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: intent-lab
+  namespace: argocd
+spec:
+  project: intent-lab
+
+  source:
+    repoURL: https://github.com/afloresdatec/intent-layer-lab.git
+    targetRevision: main
+    path: apps/intent-lab/overlays/dev
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: intent-lab
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
