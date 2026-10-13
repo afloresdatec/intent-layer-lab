@@ -90,3 +90,41 @@ entrada indica fecha, comando ejecutado y resultado real.
   `ClusterIP` activo en el puerto 80. Todo gestionado por Argo CD vía
   GitOps, sin intervención manual sobre el clúster más allá de los
   `kubectl apply` de `appproject.yaml`/`application.yaml` autorizados.
+
+## Verificación de acceso vía port-forward
+
+- Fecha: 2026-10-09
+- `kubectl -n intent-lab port-forward svc/intent-lab 8080:80`: túnel
+  local abierto contra el clúster `kind-intent-lab`. Acción de solo
+  lectura (no muta estado del clúster).
+- `curl -s -o /dev/null -w '%{http_code}' http://localhost:8080`:
+  `HTTP 200`. Confirma que el Service enruta correctamente al pod nginx
+  gestionado por Argo CD.
+
+## Prueba 7 — Drift manual y `selfHeal` de Argo CD
+
+- Fecha: 2026-10-09
+- Ejecutado por el usuario (no por el agente), de forma manual, en línea
+  con la regla de que el agente nunca realiza escrituras directas sobre
+  el clúster.
+- Comando: `kubectl -n intent-lab scale deployment/intent-lab --replicas=5`
+  → `deployment.apps/intent-lab scaled`.
+- Los `kubectl get deploy` inmediatamente posteriores ya mostraban `2/2`:
+  el `selfHeal` de Argo CD revirtió el drift antes de que fuera
+  observable en una lectura manual.
+- Confirmado con `kubectl get events --field-selector
+  involvedObject.name=intent-lab`, dos eventos consecutivos (~pocos
+  segundos de diferencia):
+  - `ScalingReplicaSet`: *"Scaled up replica set intent-lab-646dd9f89b
+    from 2 to 5"* (acción manual del usuario).
+  - `ScalingReplicaSet`: *"Scaled down replica set intent-lab-646dd9f89b
+    from 5 to 2"* (reversión automática de Argo CD).
+- `kubectl -n argocd get application intent-lab -o jsonpath` tras el
+  drift: `status.operationState.phase` = `Succeeded`, mensaje
+  *"successfully synced (all tasks run)"*; `sync.status` = `Synced`,
+  `health.status` = `Healthy`.
+- Conclusión observada: ni siquiera un cambio aplicado directamente con
+  `kubectl` por un operador humano persiste si contradice el estado
+  declarado en `apps/intent-lab/overlays/dev/kustomization.yaml`. El
+  único camino para un cambio real y durable es editar ese archivo vía
+  intención → PR → aprobación humana → sync de Argo CD.
