@@ -1,0 +1,9 @@
+{
+  "intent": "scale_deployment",
+  "target": "intent-lab",
+  "namespace": "intent-lab",
+  "requested_by": "ai-assistant@example.invalid",
+  "params": {
+    "replicas": 3
+  }
+}
